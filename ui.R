@@ -32,6 +32,7 @@ ui <- page_navbar(
         selectInput("custom_class", "Custom instrument asset class", choices = c("Equity", "Debt", "Gold")),
         actionButton("add_custom", "Add custom instrument"), hr(),
         actionButton("remove_selected", "Remove selected instruments", class = "btn-outline-danger"),
+        br(), br(), actionButton("load_data", "Load / refresh market data", class = "btn-success"),
         helpText("Examples are not guarantees of Yahoo availability. Validate data coverage before interpreting results.")
       ),
       div(

@@ -5,6 +5,10 @@ server <- function(input, output, session) {
   starter_tickers <- c("RELIANCE.NS", "LIQUIDBEES.NS", "GOLDBEES.NS")
   instruments <- reactiveVal(instrument_registry[instrument_registry$ticker %in% starter_tickers,
     c("ticker", "asset_class"), drop = FALSE])
+  input_number <- function(id, fallback = NA_real_) {
+    value <- suppressWarnings(as.numeric(input[[id]]))
+    if (length(value) != 1L || is.na(value)) fallback else value
+  }
   observe(updateSelectInput(session, "registry_choice", choices = stats::setNames(instrument_registry$ticker,
     paste(instrument_registry$name, "(", instrument_registry$ticker, ")"))))
 
@@ -32,7 +36,8 @@ server <- function(input, output, session) {
       card(class = "mb-2", layout_columns(
         checkboxInput(paste0("keep_", id), NULL, value = TRUE),
         tags$strong(t), tags$span(class = "text-muted", current$asset_class[i]),
-        numericInput(paste0("inst_", id), "Within-class allocation (%)", value = input[[paste0("inst_", id)]] %||% 100 / sum(current$asset_class == current$asset_class[i]), min = 0, max = 100, step = 1),
+        numericInput(paste0("inst_", id), "Within-class allocation (%)",
+          value = input_number(paste0("inst_", id), 100 / sum(current$asset_class == current$asset_class[i])), min = 0, max = 100, step = 1),
         col_widths = c(1, 3, 2, 6)
       ))
     }))
@@ -41,14 +46,14 @@ server <- function(input, output, session) {
     current <- instruments(); active <- unique(current$asset_class)
     if (!length(active)) return(tags$p(class = "text-muted", "Asset classes appear after instruments are added."))
     tagList(lapply(active, function(cls) numericInput(paste0("class_", cls), paste(cls, "allocation (%)"),
-      value = input[[paste0("class_", cls)]] %||% 100 / length(active), min = 0, max = 100, step = 1)))
+      value = input_number(paste0("class_", cls), 100 / length(active)), min = 0, max = 100, step = 1)))
   })
 
   allocations <- reactive({
     current <- instruments()
     classes <- unique(current$asset_class)
-    class_w <- vapply(classes, function(x) input[[paste0("class_", x)]] %||% NA_real_, numeric(1)); names(class_w) <- classes
-    inst_w <- vapply(current$ticker, function(x) input[[paste0("inst_", safe_id(x))]] %||% NA_real_, numeric(1)); names(inst_w) <- current$ticker
+    class_w <- vapply(classes, function(x) input_number(paste0("class_", x)), numeric(1)); names(class_w) <- classes
+    inst_w <- vapply(current$ticker, function(x) input_number(paste0("inst_", safe_id(x))), numeric(1)); names(inst_w) <- current$ticker
     list(instruments = current, class_weights = class_w, instrument_weights = inst_w)
   })
   allocation_error <- reactive({
@@ -65,6 +70,7 @@ server <- function(input, output, session) {
   })
 
   analysis <- reactive({
+    validate(need(!is.null(input$load_data) && input$load_data > 0, "Open Portfolio Builder and click 'Load / refresh market data'."))
     a <- allocations(); validate(need(is.null(allocation_error()), allocation_error()))
     validate(need(input$dates[1] < input$dates[2], "Select a valid historical date range."))
     fetched <- fetch_portfolio_prices(a$instruments$ticker, input$dates[1], input$dates[2])
