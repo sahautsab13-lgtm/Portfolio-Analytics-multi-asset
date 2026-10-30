@@ -1,7 +1,10 @@
 safe_id <- function(x) gsub("[^A-Za-z0-9]", "_", x)
 
 server <- function(input, output, session) {
-  instruments <- reactiveVal(data.frame(ticker = character(), asset_class = character(), stringsAsFactors = FALSE))
+  # A verified three-asset starter portfolio gives the dashboard useful content on first load.
+  starter_tickers <- c("RELIANCE.NS", "LIQUIDBEES.NS", "GOLDBEES.NS")
+  instruments <- reactiveVal(instrument_registry[instrument_registry$ticker %in% starter_tickers,
+    c("ticker", "asset_class"), drop = FALSE])
   observe(updateSelectInput(session, "registry_choice", choices = stats::setNames(instrument_registry$ticker,
     paste(instrument_registry$name, "(", instrument_registry$ticker, ")"))))
 
