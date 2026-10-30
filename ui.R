@@ -21,7 +21,7 @@ ui <- page_navbar(
   ),
   nav_panel("Portfolio Builder",
     layout_sidebar(
-      sidebar(width = 360,
+      sidebar(width = 360, open = "desktop",
         numericInput("investment", "Total investment (INR)", value = 1000000, min = 1, step = 10000),
         dateRangeInput("dates", "Historical date range", start = Sys.Date() - 365 * 3, end = Sys.Date() - 1,
           min = as.Date("2000-01-01")),
