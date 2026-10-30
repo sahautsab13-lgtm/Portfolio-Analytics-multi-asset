@@ -20,8 +20,8 @@ ui <- page_navbar(
       "Portfolio returns assume daily rebalancing to target weights. Historical data do not predict future returns; costs, taxes, liquidity and slippage are excluded.")
   ),
   nav_panel("Portfolio Builder",
-    layout_sidebar(
-      sidebar(width = 360, open = "desktop",
+    layout_columns(
+      card(
         numericInput("investment", "Total investment (INR)", value = 1000000, min = 1, step = 10000),
         dateRangeInput("dates", "Historical date range", start = Sys.Date() - 365 * 3, end = Sys.Date() - 1,
           min = as.Date("2000-01-01")),
@@ -34,8 +34,11 @@ ui <- page_navbar(
         actionButton("remove_selected", "Remove selected instruments", class = "btn-outline-danger"),
         helpText("Examples are not guarantees of Yahoo availability. Validate data coverage before interpreting results.")
       ),
-      h4("Selected instruments"), uiOutput("instrument_controls"), hr(), h4("Strategic asset allocation"), uiOutput("class_controls"),
-      div(class = "mt-3", uiOutput("allocation_message")), br(), DTOutput("allocation_table")
+      div(
+        h4("Selected instruments"), uiOutput("instrument_controls"), hr(), h4("Strategic asset allocation"), uiOutput("class_controls"),
+        div(class = "mt-3", uiOutput("allocation_message")), br(), DTOutput("allocation_table")
+      ),
+      col_widths = c(4, 8)
     )
   ),
   nav_panel("Assets & Instruments",
