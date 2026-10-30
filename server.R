@@ -42,13 +42,18 @@ server <- function(input, output, session) {
   })
 
   allocations <- reactive({
-    current <- instruments(); req(NROW(current))
+    current <- instruments()
     classes <- unique(current$asset_class)
     class_w <- vapply(classes, function(x) input[[paste0("class_", x)]] %||% NA_real_, numeric(1)); names(class_w) <- classes
     inst_w <- vapply(current$ticker, function(x) input[[paste0("inst_", safe_id(x))]] %||% NA_real_, numeric(1)); names(inst_w) <- current$ticker
     list(instruments = current, class_weights = class_w, instrument_weights = inst_w)
   })
-  allocation_error <- reactive({ a <- allocations(); validate_allocations(a$instruments, a$class_weights, a$instrument_weights) })
+  allocation_error <- reactive({
+    a <- allocations()
+    instrument_error <- validate_instruments(a$instruments)
+    if (!is.null(instrument_error)) return(instrument_error)
+    validate_allocations(a$instruments, a$class_weights, a$instrument_weights)
+  })
   output$allocation_message <- renderUI({ if (is.null(allocation_error())) tags$div(class = "alert alert-success", "Allocation is valid: effective weights sum to 100%.") else tags$div(class = "alert alert-warning", allocation_error()) })
   output$allocation_table <- renderDT({
     a <- allocations(); req(is.null(allocation_error()))

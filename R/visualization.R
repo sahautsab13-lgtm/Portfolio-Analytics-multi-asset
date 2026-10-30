@@ -1,4 +1,8 @@
-currency_inr <- function(x) paste0("₹", format(round(x, 0), big.mark = ",", scientific = FALSE))
+currency_inr <- function(x) {
+  x <- suppressWarnings(as.numeric(x))
+  if (!length(x) || is.na(x)) return("—")
+  paste0("₹", format(round(x, 0), big.mark = ",", scientific = FALSE))
+}
 
 growth_plot <- function(dates, portfolio_growth, benchmark_growth = NULL) {
   d <- data.frame(date = as.Date(dates), Diversified = as.numeric(portfolio_growth))
